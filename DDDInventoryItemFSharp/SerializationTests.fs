@@ -1,4 +1,5 @@
 ﻿module SerializationTests
+open FSharpx.Collections
 
 let serialize',deserialize = Serialization.serializer
 
@@ -20,6 +21,7 @@ type ComplexType = {
     limit : bool option;
     name : string;
     birth : System.DateTime;
+    errors: string NonEmptyList
 } 
 and ComplexEvent =
 | Created of ComplexType
@@ -31,10 +33,11 @@ and ComplexEvent =
 let complexTypeShouldSerialize() =
     
     let v = {
-        ComplexType.name = "e to the i";
-        links = [1;2;3];
-        limit = Some(false);        
-        birth = System.DateTime(1985, 10, 9);
+        ComplexType.name = "e to the i"
+        links = [1;2;3]
+        limit = Some(false)
+        birth = System.DateTime(1985, 10, 9)
+        errors = NonEmptyList.createParamsArray ("a", [|"b"; "c"|])
     }
     
     serialize (Created v) |> ignore

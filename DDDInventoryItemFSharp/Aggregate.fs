@@ -2,17 +2,19 @@
 [<RequireQualifiedAccess>]
 module Aggregate
 
+open FSharpx.Collections
+
 /// Represents an aggregate.
 type Aggregate<'TState, 'TCommand, 'TEvent> = {
     
     /// An initial state value.
-    zero : 'TState;
+    zero : 'TState
 
     /// Applies an event to a state returning a new state.
-    apply : 'TState -> 'TEvent -> 'TState;
+    apply : 'TState -> 'TEvent -> 'TState
 
     /// Executes a command on a state yielding an event.
-    exec : 'TState -> 'TCommand -> Choice<'TEvent, string list>;
+    exec : 'TState -> 'TCommand -> Choice<'TEvent, string NonEmptyList>
 }
 
 type Id = System.Guid

@@ -1,5 +1,6 @@
 ﻿[<RequireQualifiedAccess>]
 module InventoryItem
+open FSharpx.Validation
 
 type State = {
     isActive : bool;
@@ -30,9 +31,9 @@ let apply item = function
 open Validator
 
 module private Assert =
-    let validName name = notNull ["The name must not be null."] name <* notEmptyString ["The name must not be empty"] name
-    let validCount count = validator (fun c -> c > 0) ["The item count must be positive."] count
-    let inactive state = validator (fun i -> i.isActive = false) ["The item is already deactivated."] state
+    let validName name = notNull "The name must not be null." name <* notEmptyString "The name must not be empty" name
+    let validCount count = validator (fun c -> c > 0) "The item count must be positive." count
+    let inactive state = validator (fun i -> i.isActive = false) "The item is already deactivated." state
 
 let exec state =
     function

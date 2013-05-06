@@ -4,6 +4,7 @@ open System
 open System.IO
 open System.Text
 open Newtonsoft.Json
+open FSharpx.Collections
 
 module private JsonNet =
 
@@ -52,6 +53,25 @@ module private JsonNet =
                 | [] -> FSharpValue.MakeUnion(cases.[0], [||])
                 | head::tail -> FSharpValue.MakeUnion(cases.[1], [| head; (make tail); |])                    
             make (collection |> Seq.toList)
+
+    type NonEmptyListConverter() =
+        inherit JsonConverter()
+    
+        override x.CanConvert(t:Type) = 
+            t.IsGenericType && t.GetGenericTypeDefinition() = typedefof<NonEmptyList<_>>
+
+        override x.WriteJson(writer, value, serializer) =
+            let list = value :?> System.Collections.IEnumerable |> Seq.cast
+            serializer.Serialize(writer, list)
+
+        override x.ReadJson(reader, t, _, serializer) = 
+            let itemType = t.GetGenericArguments().[0]
+            let collectionType = typedefof<IEnumerable<_>>.MakeGenericType(itemType)
+            let collection = serializer.Deserialize(reader, collectionType) :?> System.Collections.IEnumerable |> Seq.cast        
+            let listType = typedefof<NonEmptyList<_>>.MakeGenericType(itemType)
+            match collection |> Seq.toList with
+            | [] -> invalidOp "NonEmptyList cannot be empty"
+            | h :: t -> NonEmptyList.create h t :> obj
 
     type OptionConverter() =
         inherit JsonConverter()
@@ -198,6 +218,7 @@ module private JsonNet =
     s.Converters.Add(new TupleArrayConverter())
     s.Converters.Add(new OptionConverter())
     s.Converters.Add(new ListConverter())
+    s.Converters.Add(new NonEmptyListConverter())
     //s.Converters.Add(new UnionExtractingConverter())
     s.Converters.Add(new UnionCaseNameConverter())
     
